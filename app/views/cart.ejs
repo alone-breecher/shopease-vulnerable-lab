@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cart - ShopEase</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+    <div class="container">
+      <a class="navbar-brand fw-bold text-primary" href="/products">
+        <i class="bi bi-bag-check-fill"></i> ShopEase
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="/products">Products</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/contact">Contact</a>
+          </li>
+        </ul>
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link active" href="/cart">
+              <i class="bi bi-cart3"></i> Cart
+              <% if (cart && cart.length > 0) { %>
+                <span class="badge bg-primary"><%= cart.length %></span>
+              <% } %>
+            </a>
+          </li>
+          <% if (user) { %>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                <i class="bi bi-person-circle"></i> <%= user.name %>
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="userDropdown">
+                <li><a class="dropdown-item" href="/orders">My Orders</a></li>
+                <% if (user.role === 'admin') { %>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item" href="/zevon-admin">Admin Panel</a></li>
+                <% } %>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="/logout">Logout</a></li>
+              </ul>
+            </li>
+          <% } else { %>
+            <li class="nav-item">
+              <a class="nav-link" href="/login">Login</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/register">Register</a>
+            </li>
+          <% } %>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container my-5">
+    <h1 class="mb-4">Shopping Cart</h1>
+
+    <% if (cart.length === 0) { %>
+      <div class="alert alert-info text-center">
+        <i class="bi bi-cart-x fs-1 d-block mb-3"></i>
+        <h4>Your cart is empty</h4>
+        <p>Browse our products and add items to get started</p>
+        <a href="/products" class="btn btn-primary">Continue Shopping</a>
+      </div>
+    <% } else { %>
+      <div class="row">
+        <div class="col-md-8">
+          <div class="card">
+            <div class="card-body">
+              <%
+                let total = 0;
+                cart.forEach(item => {
+                  total += item.price * item.quantity;
+              %>
+                <div class="row mb-3 pb-3 border-bottom align-items-center">
+                  <div class="col-md-2">
+                    <div class="bg-light d-flex align-items-center justify-content-center" style="height: 80px;">
+                      <i class="bi bi-image text-muted fs-3"></i>
+                    </div>
+                  </div>
+                  <div class="col-md-5">
+                    <h6><%= item.name %></h6>
+                    <p class="text-muted mb-0">Quantity: <%= item.quantity %></p>
+                  </div>
+                  <div class="col-md-3">
+                    <p class="fw-bold mb-0">₹<%= (item.price * item.quantity).toLocaleString('en-IN') %></p>
+                  </div>
+                  <div class="col-md-2">
+                    <button class="btn btn-sm btn-danger" onclick="removeFromCart(<%= item.id %>)">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </div>
+              <% }); %>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title mb-3">Order Summary</h5>
+              <div class="d-flex justify-content-between mb-2">
+                <span>Subtotal:</span>
+                <span>₹<%= total.toLocaleString('en-IN') %></span>
+              </div>
+              <div class="d-flex justify-content-between mb-2">
+                <span>Shipping:</span>
+                <span class="text-success">FREE</span>
+              </div>
+              <hr>
+              <div class="d-flex justify-content-between mb-3">
+                <strong>Total:</strong>
+                <strong class="text-primary fs-4">₹<%= total.toLocaleString('en-IN') %></strong>
+              </div>
+              <div class="mb-3">
+                <input type="text" class="form-control" placeholder="Discount Code" id="discountCode">
+              </div>
+              <a href="/checkout" class="btn btn-primary w-100 btn-lg">Proceed to Checkout</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% } %>
+  </main>
+
+  <footer class="bg-dark text-white mt-5 py-4">
+    <div class="container">
+      <div class="text-center text-muted">
+        <p>&copy; 2024 ShopEase. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function removeFromCart(productId) {
+      fetch('/cart/remove', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ product_id: productId })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          location.reload();
+        }
+      });
+    }
+  </script>
+</body>
+</html>

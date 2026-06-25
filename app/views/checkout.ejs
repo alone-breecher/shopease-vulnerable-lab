@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout - ShopEase</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+    <div class="container">
+      <a class="navbar-brand fw-bold text-primary" href="/products">
+        <i class="bi bi-bag-check-fill"></i> ShopEase
+      </a>
+    </div>
+  </nav>
+
+  <main class="container my-5">
+    <h1 class="mb-4">Checkout</h1>
+
+    <div class="row">
+      <div class="col-md-7">
+        <div class="card mb-4">
+          <div class="card-body">
+            <h5 class="card-title mb-3">Delivery Address</h5>
+            <form id="checkoutForm">
+              <div class="mb-3">
+                <label class="form-label">Full Address</label>
+                <textarea class="form-control" id="address" rows="3" required></textarea>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Payment Method</label>
+                <select class="form-select">
+                  <option selected>Cash on Delivery (COD)</option>
+                  <option>UPI</option>
+                  <option>Credit/Debit Card</option>
+                </select>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-5">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title mb-3">Order Summary</h5>
+            <%
+              let total = 0;
+              cart.forEach(item => {
+                total += item.price * item.quantity;
+            %>
+              <div class="d-flex justify-content-between mb-2">
+                <span><%= item.name %> x <%= item.quantity %></span>
+                <span>₹<%= (item.price * item.quantity).toLocaleString('en-IN') %></span>
+              </div>
+              <input type="hidden" class="item-data" data-id="<%= item.id %>" data-price="<%= item.price %>" data-quantity="<%= item.quantity %>">
+            <% }); %>
+            <hr>
+            <div class="d-flex justify-content-between mb-3">
+              <strong>Total:</strong>
+              <strong class="text-primary fs-4">₹<%= total.toLocaleString('en-IN') %></strong>
+            </div>
+            <button class="btn btn-primary w-100 btn-lg" onclick="placeOrder()">Place Order</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="bg-dark text-white mt-5 py-4">
+    <div class="container">
+      <div class="text-center text-muted">
+        <p>&copy; 2024 ShopEase. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function placeOrder() {
+      const address = document.getElementById('address').value;
+      if (!address) {
+        alert('Please enter delivery address');
+        return;
+      }
+
+      const items = [];
+      document.querySelectorAll('.item-data').forEach(el => {
+        items.push({
+          id: el.dataset.id,
+          price: el.dataset.price,
+          quantity: el.dataset.quantity
+        });
+      });
+
+      fetch('/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ address, items: JSON.stringify(items) })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          alert('Order placed successfully! Order ID: ' + data.order_id);
+          window.location.href = '/orders';
+        } else {
+          alert('Error: ' + data.message);
+        }
+      });
+    }
+  </script>
+</body>
+</html>
