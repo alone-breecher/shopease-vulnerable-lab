@@ -189,6 +189,33 @@ curl -X POST http://localhost/reset-password \
 
 ## 🔐 A07: Authentication Failures
 
+### Forgot Password - Multiple Vulnerabilities ⭐ NEW
+- [ ] Navigate to `/forgot-password` (link on login page)
+- [ ] Test with valid email: `strawhattemp6@gmail.com`
+- [ ] **Expected**: Password `Temp6@1234` displayed in plain text
+- [ ] **Impact**: Information disclosure without authentication
+
+#### SQL Injection in Forgot Password
+- [ ] Email input: `' OR '1'='1' --`
+- [ ] **Expected**: First user's password displayed
+- [ ] Try: `' UNION SELECT id,name,email,password,role,phone,address,created_at FROM users WHERE '1'='1' --`
+- [ ] **Impact**: Extract all user passwords via SQLi
+
+#### User Enumeration
+- [ ] Test with invalid email: `notexist@fake.com`
+- [ ] **Expected**: Error "Email not found in our system"
+- [ ] Test with valid email: `admin@shopease.in`
+- [ ] **Expected**: Shows "Your password is: admin123"
+- [ ] **Impact**: Reveals which emails are registered
+
+#### No Rate Limiting on Forgot Password
+- [ ] Submit 20+ requests in quick succession
+- [ ] **Expected**: All processed without throttling
+- [ ] No CAPTCHA appears
+- [ ] **Impact**: Brute force email enumeration
+
+**📚 Full Documentation:** See `FORGOT_PASSWORD_VULNERABILITIES.md`
+
 ### No Account Lockout
 - [ ] Attempt login with wrong password 20 times
 - [ ] **Expected**: No lockout, no CAPTCHA

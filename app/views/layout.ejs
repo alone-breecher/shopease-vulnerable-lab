@@ -69,6 +69,7 @@
                 <span class="fw-semibold"><%= user.name %></span>
               </a>
               <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
+                <li><a class="dropdown-item" href="/profile"><i class="bi bi-person me-2"></i>My Profile</a></li>
                 <li><a class="dropdown-item" href="/orders"><i class="bi bi-bag-check me-2"></i>My Orders</a></li>
                 <% if (user.role === 'admin') { %>
                   <li><hr class="dropdown-divider"></li>

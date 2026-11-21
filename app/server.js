@@ -10,8 +10,13 @@ const cartRoutes = require('./routes/cart');
 const ordersRoutes = require('./routes/orders');
 const adminRoutes = require('./routes/admin');
 const contactRoutes = require('./routes/contact');
+const profileRoutes = require('./routes/profile');
+const apiRoutes = require('./routes/api');
 
 const app = express();
+
+// Disable ETags to prevent 304 Not Modified responses
+app.set('etag', false);
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -20,9 +25,13 @@ app.set('layout', 'layout');
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+  etag: false,
+  lastModified: false
+}));
 
 app.use(session({
+  name: 'session_id',
   secret: process.env.SESSION_SECRET || 'secret123',
   resave: false,
   saveUninitialized: true,
@@ -32,6 +41,35 @@ app.use(session({
     maxAge: 24 * 60 * 60 * 1000
   }
 }));
+
+// Middleware to disable caching and ETags globally - must intercept writeHead
+app.use((req, res, next) => {
+  const _writeHead = res.writeHead.bind(res);
+
+  res.writeHead = function(statusCode, reasonPhrase, headers) {
+    // Remove ETag header before writing response
+    delete this._headers['etag'];
+
+    if (typeof reasonPhrase === 'object') {
+      headers = reasonPhrase;
+      reasonPhrase = undefined;
+    }
+
+    if (headers) {
+      delete headers['etag'];
+      delete headers['ETag'];
+    }
+
+    // Set cache control headers
+    this.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    this.setHeader('Pragma', 'no-cache');
+    this.setHeader('Expires', '0');
+
+    return _writeHead(statusCode, reasonPhrase, headers);
+  };
+
+  next();
+});
 
 app.use((req, res, next) => {
   res.locals.user = req.session.user || null;
@@ -49,6 +87,8 @@ app.use('/', cartRoutes);
 app.use('/', ordersRoutes);
 app.use('/zevon-admin', adminRoutes);
 app.use('/', contactRoutes);
+app.use('/', profileRoutes);
+app.use('/', apiRoutes);
 
 app.get('/api/debug', (req, res) => {
   res.json({

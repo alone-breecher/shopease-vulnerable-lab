@@ -10,7 +10,7 @@
   <div class="row g-4">
     <div class="col-md-6">
       <div class="card shadow-sm">
-        <img src="<%= product.image_url %>" class="product-detail-img p-4" alt="<%= product.name %>" onerror="this.src='https://via.placeholder.com/600x600?text=<%= encodeURIComponent(product.name) %>'">
+        <img src="<%= product.image_url %>" class="product-detail-img p-4" alt="<%= product.name %>" onerror="this.onerror=null;this.src='/img/placeholder.svg'">
       </div>
     </div>
     <div class="col-md-6">
@@ -73,7 +73,7 @@
       <% related.forEach(p => { %>
         <div class="col">
           <div class="card h-100 shadow-sm">
-            <img src="<%= p.image_url %>" class="product-img" alt="<%= p.name %>" onerror="this.src='https://via.placeholder.com/300x300?text=<%= encodeURIComponent(p.name) %>'">
+            <img src="<%= p.image_url %>" class="product-img" alt="<%= p.name %>" onerror="this.onerror=null;this.src='/img/placeholder.svg'">
             <div class="card-body">
               <h6 class="card-title"><%= p.name %></h6>
               <p class="price-tag" style="font-size: 1.25rem;">₹<%= p.price.toLocaleString('en-IN') %></p>

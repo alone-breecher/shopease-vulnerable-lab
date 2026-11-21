@@ -57,10 +57,47 @@ router.get('/logout', (req, res) => {
   res.redirect('/login');
 });
 
+router.get('/forgot-password', (req, res) => {
+  res.render('forgot-password', { error: null, success: null });
+});
+
+router.post('/forgot-password', async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    // Vulnerable: SQL Injection
+    const query = `SELECT * FROM users WHERE email = '${email}'`;
+    const [users] = await db.query(query);
+
+    if (users.length > 0) {
+      const user = users[0];
+      // Vulnerable: Information Disclosure - returns actual password
+      res.render('forgot-password', {
+        error: null,
+        success: `Your password is: ${user.password}`,
+        user: user
+      });
+    } else {
+      // Vulnerable: User enumeration - reveals if email exists
+      res.render('forgot-password', {
+        error: 'Email not found in our system',
+        success: null
+      });
+    }
+  } catch (err) {
+    // Vulnerable: Error message disclosure
+    res.render('forgot-password', {
+      error: `Database error: ${err.message}`,
+      success: null
+    });
+  }
+});
+
 router.post('/reset-password', async (req, res) => {
   const { email, new_password } = req.body;
 
   try {
+    // Vulnerable: SQL Injection, No authentication required
     const query = `UPDATE users SET password = '${new_password}' WHERE email = '${email}'`;
     await db.query(query);
     res.json({ success: true, message: 'Password reset successfully' });
